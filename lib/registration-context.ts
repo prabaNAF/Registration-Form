@@ -1,0 +1,12 @@
+import {env} from "cloudflare:workers";
+import {registrationOrigin} from "./public-cors";
+import {DEADLINE,RULES_VERSION,type CollegeId} from "./domain";
+type Context={origin?:string;collegeId:CollegeId;version:string;acknowledgedAt:string;expiresAt:string;nonce:string};
+const encoder=new TextEncoder();
+const encode=(value:Uint8Array)=>btoa(Array.from(value,b=>String.fromCharCode(b)).join("")).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/g,"");
+const decode=(value:string)=>Uint8Array.from(atob(value.replace(/-/g,"+").replace(/_/g,"/")),c=>c.charCodeAt(0));
+async function key(){if(!env.REGISTRATION_CONTEXT_SECRET||env.REGISTRATION_CONTEXT_SECRET.length<32)throw new Error("Registration context not configured.");return crypto.subtle.importKey('raw',encoder.encode(env.REGISTRATION_CONTEXT_SECRET),{name:'HMAC',hash:'SHA-256'},false,['sign','verify']);}
+export async function issueContext(id:CollegeId,origin?:string){const data:Context={...(origin?{origin}:{}),collegeId:id,version:RULES_VERSION,acknowledgedAt:new Date().toISOString(),expiresAt:DEADLINE,nonce:crypto.randomUUID()};const payload=encode(encoder.encode(JSON.stringify(data)));const signature=await crypto.subtle.sign('HMAC',await key(),encoder.encode(payload));return `${payload}.${encode(new Uint8Array(signature))}`;}
+export const cookieName=(id:CollegeId)=>`wsd_instructions_${id}`;
+export async function verifyContext(request:Request,id:CollegeId):Promise<Context|null>{try{const origin=registrationOrigin(request);const supplied=request.headers.get('x-registration-context');const cookie=request.headers.get('cookie')?.split(';').map(s=>s.trim()).find(s=>s.startsWith(cookieName(id)+'='));const token=origin?supplied:cookie?.slice(cookie.indexOf('=')+1);if(!token)return null;const [payload,signature,...rest]=token.split('.');if(!payload||!signature||rest.length)return null;if(!await crypto.subtle.verify('HMAC',await key(),decode(signature),encoder.encode(payload)))return null;const d=JSON.parse(new TextDecoder().decode(decode(payload))) as Context;return (origin?d.origin===origin:!d.origin)&&d.collegeId===id&&d.version===RULES_VERSION&&d.expiresAt===DEADLINE&&Date.now()<Date.parse(DEADLINE)&&Date.parse(d.acknowledgedAt)<=Date.now()+60000?d:null;}catch{return null;}}
+export function contextCookie(id:CollegeId,token:string,secure:boolean){const age=Math.max(1,Math.ceil((Date.parse(DEADLINE)-Date.now())/1000));return `${cookieName(id)}=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${age}${secure?'; Secure':''}`;}

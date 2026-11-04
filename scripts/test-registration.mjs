@@ -1,0 +1,89 @@
+import assert from 'node:assert/strict';
+import {randomUUID} from 'node:crypto';
+import {writeFile} from 'node:fs/promises';
+import {unzipSync,strFromU8} from 'fflate';
+import {createLocalHarness} from './local-api-harness.mjs';
+
+const h=await createLocalHarness();const base='http://terminal.local:4173';
+const colleges={srm:'SRM Institute of Science and Technology (SRM)',vit:'Vellore Institute of Technology (VIT)',au:'Anna University (AU)'};
+const topics=['Genesis of Soil Compaction','Consequences of Soil Compaction','Diagnosis of Soil Compaction','Recent Advances in Soil Compaction Assessment','Ameliorative Measures in Soil Compaction'];
+const version='wsd-2026-three-college-v2';const deadline=Date.parse('2026-11-16T11:30:00.000Z');
+const admin={'oai-authenticated-user-id':'qa-organizer','oai-authenticated-user-email':'qa@naf.test'};
+const cookies={};let serial=0,checks=0;
+const check=(condition,message)=>{assert.ok(condition,message);checks++;console.log('PASS '+message);};
+async function call(path,body,extra={}){return h.fetch(base+path,{method:body?'POST':'GET',headers:{...(body?{'Content-Type':'application/json'}:{}),...extra},...(body?{body:JSON.stringify(body)}:{})});}
+async function ack(id){const r=await call(`/api/college/${id}/instructions`,{accepted:true,version});assert.equal(r.status,200,await r.clone().text());cookies[id]=r.headers.get('set-cookie').split(';')[0];return r;}
+function student(id){const n=++serial;return {name:`QA Student ${n}`,institution:colleges[id],department:'Soil Science',degree:'B.Sc. Agriculture',year:'2',programme:'UG',email:`qa-${n}@example.invalid`,mobile:`9${String(n).padStart(9,'0')}`};}
+function entry(id,competition='essay',topic=topics[0],size=competition==='ppt'?2:1){return {collegeId:id,university:colleges[id],competition,topic:competition==='essay'?'':topic,teamName:competition==='ppt'?`QA Team ${++serial}`:'',members:Array.from({length:size},()=>student(id)),facultyName:'QA Coordinator',facultyEmail:'qa-faculty@example.invalid',facultyMobile:'9000000000',consent:true,requestKey:randomUUID()};}
+async function reg(id,input=entry(id),cookie=cookies[id]){const r=await call(`/api/college/${id}/register`,input,cookie?{Cookie:cookie}:{});return {status:r.status,data:await r.json()};}
+const state=async()=>{const r=await call('/api/availability');assert.equal(r.status,200);return r.json();};
+const dashboard=async()=>{const r=await call('/api/admin',undefined,admin);assert.equal(r.status,200);return r.json();};
+async function cancel(id){const r=await call('/api/admin',{action:'cancel',id},admin);assert.equal(r.status,200);}
+async function config(settings){const r=await call('/api/admin',{action:'settings',settings},admin);assert.equal(r.status,200,await r.clone().text());}
+try{
+ await writeFile('outputs/atomic-registration.sql',h.sql);
+ check((await call('/api/admin')).status===403,'anonymous central dashboard denied');
+ check((await call('/api/admin/export?college=srm&format=xlsx')).status===403,'anonymous college Excel export denied');
+ check((await call('/api/register',entry('srm'))).status===400,'generic registration endpoint cannot bypass locked college links');
+ check((await call('/api/college/unknown/register',entry('srm'))).status===404,'unknown college link rejected');
+ check((await reg('srm',entry('srm'),null)).status===403,'form submission requires signed instructions acknowledgement');
+ check((await call('/api/college/srm/instructions',{accepted:false,version})).status===400,'instructions cannot be acknowledged with a false value');
+ const firstAck=await ack('srm');check(firstAck.headers.get('set-cookie').includes('HttpOnly')&&firstAck.headers.get('set-cookie').includes('SameSite=Lax'),'acknowledgement context is held in an HttpOnly same-site cookie');
+ await ack('vit');await ack('au');
+ const srmToken=cookies.srm.slice(cookies.srm.indexOf('=')+1);
+ check((await reg('vit',entry('vit'),'wsd_instructions_vit='+srmToken)).status===403,'signed SRM context cannot authorize a VIT entry');
+ check((await reg('srm',entry('srm'),cookies.srm.slice(0,-2)+'xx')).status===403,'tampered acknowledgement signature rejected');
+ const changed=entry('srm');changed.collegeId='vit';check((await reg('srm',changed)).status===400,'body college ID cannot change the route-bound college');
+ const changedName=entry('srm');changedName.university=colleges.vit;check((await reg('srm',changedName)).status===400,'body college name cannot change the locked college');
+ const changedMember=entry('srm');changedMember.members[0].institution=colleges.au;check((await reg('srm',changedMember)).status===400,'tampering a team member college is rejected');
+ const missingDegree=entry('srm');delete missingDegree.members[0].degree;check((await reg('srm',missingDegree)).status===400,'degree / programme required server-side');
+ const missingEmail=entry('srm');delete missingEmail.facultyEmail;check((await reg('srm',missingEmail)).status===400,'faculty coordinator email required server-side');
+ const invalidEmail=entry('srm');invalidEmail.facultyEmail='invalid';check((await reg('srm',invalidEmail)).status===400,'faculty coordinator email validated');
+ const cross=await call('/api/college/srm/register',entry('srm'),{Cookie:cookies.srm,Origin:'https://example.invalid','Sec-Fetch-Site':'cross-site'});check(cross.status===400,'cross-site registration POST blocked');
+ const initial=entry('srm');const confirmed=await reg('srm',initial);check(confirmed.status===201&&confirmed.data.registration.collegeId==='srm'&&/^WSD26-SRM-ESS-[A-F0-9]{16}$/.test(confirmed.data.registration.id),'successful registration has server-bound college and unique ID');
+ const retry=await reg('srm',initial);check(retry.status===200&&retry.data.registration.id===confirmed.data.registration.id,'identical retry returns the same confirmation');
+ await ack('srm');const refreshedRetry=await reg('srm',initial);check(refreshedRetry.status===200&&refreshedRetry.data.registration.id===confirmed.data.registration.id,'refreshing acknowledgement does not break safe retry');
+ const simultaneous=entry('srm');const same=await Promise.all([reg('srm',simultaneous),reg('srm',simultaneous)]);check(same.every(r=>[200,201].includes(r.status))&&same[0].data.registration.id===same[1].data.registration.id,'simultaneous identical submissions occupy one seat');
+ const duplicateEmail=entry('srm');duplicateEmail.members[0].email=initial.members[0].email.toUpperCase();check((await reg('srm',duplicateEmail)).status===409,'duplicate email is case-insensitive within the college and competition');
+ const duplicatePhone=entry('srm');duplicatePhone.members[0].mobile='+91 '+initial.members[0].mobile;check((await reg('srm',duplicatePhone)).status===409,'mobile country-code variants cannot create duplicates');
+ const otherCollege=entry('vit');otherCollege.members[0].email=initial.members[0].email;otherCollege.members[0].mobile=initial.members[0].mobile;check((await reg('vit',otherCollege)).status===201,'duplicate prevention is independent between colleges');
+ const otherCompetition=entry('srm','poster');otherCompetition.members[0].email=initial.members[0].email;otherCompetition.members[0].mobile=initial.members[0].mobile;check((await reg('srm',otherCompetition)).status===201,'one student may enter a different competition separately');
+ const fillEssay=await Promise.all(Array.from({length:35},()=>reg('srm',entry('srm'))));check(fillEssay.filter(r=>r.status===201).length===23&&(await state()).colleges.srm.competitions.essay.count===25,'concurrent SRM essay submissions stop at 25');
+ let live=await state();check(live.colleges.vit.competitions.essay.open&&live.colleges.au.competitions.essay.open,'SRM essay filling does not close VIT or AU');
+ for(const id of ['vit','au']){const before=(await state()).colleges[id].competitions.essay.count;const result=await Promise.all(Array.from({length:32},()=>reg(id,entry(id))));check(result.filter(r=>r.status===201).length===25-before&&(await state()).colleges[id].competitions.essay.count===25,`${id.toUpperCase()} essay has an independent 25-person limit`);}
+ check((await state()).competitions.essay.count===75,'all three college essay limits total 75');
+ for(const id of ['srm','vit','au']){const before=(await state()).colleges[id].competitions.poster.count;const result=await Promise.all(Array.from({length:31},()=>reg(id,entry(id,'poster'))));check(result.filter(r=>r.status===201).length===25-before&&(await state()).colleges[id].competitions.poster.count===25,`${id.toUpperCase()} poster has an independent 25-person limit`);}
+ check((await state()).competitions.poster.count===75,'all three college poster limits total 75');
+ check((await reg('srm',entry('srm','ppt',topics[0],1))).status===400,'one-person PPT team rejected');
+ check((await reg('srm',entry('srm','ppt',topics[0],4))).status===400,'four-person PPT team rejected');
+ const team=entry('srm','ppt',topics[0],3);team.teamName='=QA Formula Team';team.members[1].name='=HYPERLINK("https://example.invalid","QA")';const teamResult=await reg('srm',team);check(teamResult.status===201,'three-person PPT team accepted with all member details');
+ const nonleader=entry('srm','ppt',topics[1]);nonleader.members[1].email=team.members[2].email;check((await reg('srm',nonleader)).status===409,'duplicate checks include non-leader team members');
+ const teamNameDuplicate=entry('srm','ppt',topics[1]);teamNameDuplicate.teamName='  =QA   FORMULA  TEAM  ';check((await reg('srm',teamNameDuplicate)).status===409,'team names are normalized and duplicate teams blocked');
+ const badTopic=entry('srm','ppt');badTopic.topic='Unlisted topic';check((await reg('srm',badTopic)).status===400,'PPT limited to the five supplied topics');
+ const topicFill=await Promise.all(Array.from({length:9},()=>reg('srm',entry('srm','ppt',topics[0]))));check(topicFill.filter(r=>r.status===201).length===2&&(await state()).colleges.srm.topics[0].remaining===0,'SRM topic stops at three teams');
+ live=await state();check(live.colleges.vit.topics[0].remaining===3&&live.colleges.au.topics[0].remaining===3,'full SRM topic remains available to VIT and AU');
+ for(const id of ['srm','vit','au']){const before=(await state()).colleges[id].competitions.ppt.count;const result=await Promise.all(topics.flatMap(topic=>Array.from({length:6},()=>reg(id,entry(id,'ppt',topic)))));live=await state();check(result.filter(r=>r.status===201).length===15-before&&live.colleges[id].competitions.ppt.count===15&&live.colleges[id].topics.every(t=>t.count===3),`${id.toUpperCase()} accepts 15 PPT teams with exactly three per topic`);}
+ check((await state()).competitions.ppt.count===45,'all three college PPT limits total 45 teams');
+ const all=await dashboard();check(all.colleges.length===3&&all.registrations.filter(r=>r.status==='confirmed').length===195,'central dashboard combines 75 Essay, 45 PPT and 75 Poster entries');
+ const firstSrmEssay=all.registrations.find(r=>r.collegeId==='srm'&&r.competition==='essay');await cancel(firstSrmEssay.id);check((await state()).colleges.srm.competitions.essay.remaining===1&&(await state()).colleges.vit.competitions.essay.remaining===0,'cancellation releases only the matching college seat');
+ const lastSeat=await Promise.all([reg('srm',entry('srm')),reg('srm',entry('srm'))]);check(lastSeat.filter(r=>r.status===201).length===1,'two final-seat contenders yield one winner');
+ const firstPpt=all.registrations.find(r=>r.collegeId==='srm'&&r.competition==='ppt'&&r.id!==teamResult.data.registration.id);await cancel(firstPpt.id);const afterCancel=await state();check(afterCancel.colleges.srm.competitions.ppt.remaining===1&&afterCancel.colleges.vit.competitions.ppt.remaining===0,'PPT cancellation affects only its college');
+ const oldControls=afterCancel.settings;await config({...oldControls,colleges:{...oldControls.colleges,srm:{...oldControls.colleges.srm,pptOpen:false}}});check((await reg('srm',entry('srm','ppt',firstPpt.topic))).data.code==='manual','college-specific competition switch blocks a free slot');await config(oldControls);check((await reg('srm',entry('srm','ppt',firstPpt.topic))).status===201,'manual reopening accepts the freed college slot');
+ await cancel(teamResult.data.registration.id);const duplicateContactRetry=entry('srm','ppt',topics[0],3);duplicateContactRetry.members=team.members;duplicateContactRetry.teamName=team.teamName;check((await reg('srm',duplicateContactRetry)).status===201,'cancellation releases team contacts and team name');
+ const csv=await call('/api/admin/export?college=srm&status=confirmed&format=csv',undefined,admin);const csvText=await csv.text();check(csv.status===200&&csvText.includes('Faculty Coordinator Email')&&!csvText.includes(colleges.vit)&&!csvText.includes(colleges.au),'CSV is college-specific and includes new student and faculty fields');check(csvText.includes("'=HYPERLINK"),'CSV formula-like values are neutralized');
+ const excel=await call('/api/admin/export?college=srm&status=confirmed&format=xlsx',undefined,admin);const excelBytes=new Uint8Array(await excel.arrayBuffer());const book=unzipSync(excelBytes);const details=strFromU8(book['xl/worksheets/sheet2.xml']);check(excel.status===200&&details.includes(colleges.srm.replaceAll('&','&amp;'))&&!details.includes(colleges.vit)&&!details.includes('<f>'),'Excel college filtering and inline-string safety verified');check(strFromU8(book['xl/workbook.xml']).includes('PPT Topic Availability'),'Excel includes topic-wise college availability');await writeFile('outputs/qa-three-college-srm.xlsx',excelBytes);
+ const consolidated=await call('/api/admin/export?college=all&format=xlsx',undefined,admin);const combined=unzipSync(new Uint8Array(await consolidated.arrayBuffer()));check(COLLEGES_NAMES().every(name=>strFromU8(combined['xl/worksheets/sheet1.xml']).includes(name)),'NAF consolidated workbook contains all three colleges');
+ check((await call('/api/admin/export?college=annamalai&format=xlsx',undefined,admin)).status===400,'removed institution is not silently relabeled as Anna University');
+ const forgedClose=await call('/api/college/srm/instructions',{accepted:true,version},{Origin:'https://example.invalid','Sec-Fetch-Site':'cross-site'});check(forgedClose.status===400,'cross-site instructions acknowledgement blocked');
+ const legacyId='WSD26-ESS-ABCDEF1234567890';const legacyDetails={...entry('srm'),university:'Annamalai University'};delete legacyDetails.collegeId;await h.database.prepare("INSERT INTO registrations(id,competition,status,payload,request_key,created_at) VALUES(?,?,?,?,?,?)").bind(legacyId,'essay','confirmed',JSON.stringify(legacyDetails),randomUUID(),'2026-11-02T00:00:00Z').run();const legacyView=await dashboard();check(legacyView.registrations.find(r=>r.id===legacyId).collegeId===null&&(await state()).competitions.essay.count===75,'Annamalai legacy records are preserved outside Anna University capacity');
+ const legacyExcel=await call('/api/admin/export?college=legacy&format=csv',undefined,admin);check((await legacyExcel.text()).includes('Annamalai University'),'historical institution records remain exportable');
+ const entryForDeadline=entry('au');const existingAu=legacyView.registrations.find(r=>r.collegeId==='au'&&r.competition==='essay');await cancel(existingAu.id);
+ h.setTime(deadline-1);await ack('au');check((await reg('au',entryForDeadline)).status===201,'submission at 16:59:59.999 IST accepted if a seat remains');
+ const auAgain=(await dashboard()).registrations.find(r=>r.collegeId==='au'&&r.competition==='essay'&&r.status==='confirmed');await cancel(auAgain.id);
+ h.setTime(deadline);const exactly=await reg('au',entry('au'));check(exactly.status===410&&exactly.data.code==='deadline','submission at exactly 17:00:00 IST rejected');
+ h.setTime(deadline+1);check((await reg('au',{...entry('au'),clientTime:'2026-11-04T00:00:00Z'})).status===410,'client timestamp cannot bypass the deadline');check((await call('/api/college/au/instructions',{accepted:true,version})).status===410,'instructions cannot be re-acknowledged after closure');
+ const reopen=(await state()).settings;await config(reopen);live=await state();check(live.deadlinePassed&&Object.values(live.colleges).every(c=>Object.values(c.competitions).every(a=>!a.open&&a.reason==='deadline')),'manual opening cannot reopen any college after the deadline');
+ h.setTime(deadline-1);await ack('au');h.beforeNextInsert(()=>h.setTime(deadline));const crossing=await reg('au',entry('au'));check(crossing.status===410&&(await state()).colleges.au.competitions.essay.remaining===1,'database clock rejects a request crossing the cutoff during submission');
+ console.log(`${checks} three-college API, privacy, capacity, acknowledgement and deadline checks passed.`);
+}finally{h.dispose();}
+function COLLEGES_NAMES(){return Object.values(colleges);}
