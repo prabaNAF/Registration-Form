@@ -9,8 +9,8 @@ https://prabanaf.github.io/Registration-Form/register/srm/
 Vellore Institute of Technology (VIT)
 https://prabanaf.github.io/Registration-Form/register/vit/
 
-Anna University (AU)
-https://prabanaf.github.io/Registration-Form/register/au/
+Adhiparashakthi Agricultural College
+https://prabanaf.github.io/Registration-Form/register/aac/
 
 Each QR code opens its own locked college registration link.
 PNG: high-resolution, 300 DPI. SVG: scalable print artwork.

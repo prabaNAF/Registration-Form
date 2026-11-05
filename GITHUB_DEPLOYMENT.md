@@ -10,7 +10,7 @@ Expected portal address after activation: `https://prabanaf.github.io/Registrati
 
 - SRM: `/Registration-Form/register/srm/`
 - VIT: `/Registration-Form/register/vit/`
-- Anna University: `/Registration-Form/register/au/`
+- Adhiparashakthi Agricultural College: `/Registration-Form/register/aac/`
 
 High-resolution college QR images and SVG artwork are in `docs/qr/`. Use these for GitHub-hosted links. The original backend portal's QR codes in `public/qr/` retain their original links.
 

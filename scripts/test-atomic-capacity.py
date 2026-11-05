@@ -7,7 +7,7 @@ import json,sqlite3,threading,uuid,datetime
 root=Path(__file__).resolve().parents[1]
 sql=(root/'outputs/atomic-registration.sql').read_text()
 topics=['Genesis of Soil Compaction','Consequences of Soil Compaction','Diagnosis of Soil Compaction','Recent Advances in Soil Compaction Assessment','Ameliorative Measures in Soil Compaction']
-colleges=['srm','vit','au']
+colleges=['srm','vit','aac']
 deadline=datetime.datetime(2026,11,16,11,30,tzinfo=datetime.timezone.utc).timestamp()
 checks=0
 def check(condition,message):
@@ -48,17 +48,17 @@ with TemporaryDirectory() as temporary:
     check(len(counts)==15 and all(count==3 for _,_,count in counts),'each of 15 college-topic combinations has exactly three teams')
     check(all(db.execute('SELECT count(*) FROM registrations WHERE college_id=?',(c,)).fetchone()[0]==15 for c in colleges),'each college has exactly 15 PPT teams')
     reset();check(race([('srm','ppt',topics[0])]*20)==3,'one college topic cannot exceed three concurrent registrations')
-    check(attempt('vit','ppt',topics[0])==1 and attempt('au','ppt',topics[0])==1,'full SRM topic does not remove VIT or AU slots')
+    check(attempt('vit','ppt',topics[0])==1 and attempt('aac','ppt',topics[0])==1,'full SRM topic does not remove VIT or AAC slots')
     reset();check(race([('srm','essay','', 'duplicate@example.invalid')]*20)==1,'simultaneous duplicate emails consume exactly one college seat')
     check(attempt('vit','essay','', 'duplicate@example.invalid')==1,'same contact in another college is not blocked by SRM')
-    reset();check(race([('au','essay','',None,'9000000000')]*20)==1,'simultaneous duplicate mobile numbers consume one seat')
+    reset();check(race([('aac','essay','',None,'9000000000')]*20)==1,'simultaneous duplicate mobile numbers consume one seat')
     reset();check(race([('vit','ppt',topics[1],None,None,'same-normalized-team')]*20)==1,'simultaneous duplicate team names consume one team slot')
     reset()
-    for _ in range(24):assert attempt('au')==1
-    check(race([('au',)]*20)==1,'20 writers competing for AU’s final essay seat yield exactly one winner')
+    for _ in range(24):assert attempt('aac')==1
+    check(race([('aac',)]*20)==1,'20 writers competing for AAC’s final essay seat yield exactly one winner')
     reset();check(attempt('srm',clock=deadline-.001)==1,'database accepts a write one millisecond before the cutoff')
-    check(attempt('vit',clock=deadline)==0 and attempt('au',clock=deadline+.001)==0,'database rejects at and immediately after the exact IST cutoff')
+    check(attempt('vit',clock=deadline)==0 and attempt('aac',clock=deadline+.001)==0,'database rejects at and immediately after the exact IST cutoff')
     reset();db.execute("INSERT INTO settings(key,value) VALUES('config',?)",(json.dumps({'colleges':{'srm':{'open':False}}}),))
-    check(attempt('srm')==0 and attempt('vit')==1 and attempt('au')==1,'atomic write enforces college-specific manual closure')
+    check(attempt('srm')==0 and attempt('vit')==1 and attempt('aac')==1,'atomic write enforces college-specific manual closure')
     db.close()
 print(f'{checks} independent concurrent-write and database-cutoff checks passed.')

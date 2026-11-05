@@ -1,5 +1,5 @@
 import {createRequire} from 'node:module';
-import {mkdir,readFile,writeFile,copyFile} from 'node:fs/promises';
+import {mkdir,readFile,writeFile,copyFile,rm} from 'node:fs/promises';
 import path from 'node:path';
 import {pathToFileURL} from 'node:url';
 const require=createRequire(import.meta.resolve('wrangler'));
@@ -11,6 +11,7 @@ const output=path.join(root,'docs');
 const base='/Registration-Form';
 const apiOrigin='https://naf-soil-day-2026-student-registration.nationalagro-8017.chatgpt.site';
 const define={__NAF_BASE_PATH__:JSON.stringify(base),__NAF_API_ORIGIN__:JSON.stringify(apiOrigin),'process.env.NODE_ENV':'"production"'};
+await rm(path.join(output,'register','au'),{recursive:true,force:true});
 await mkdir(path.join(output,'assets'),{recursive:true});
 await mkdir(path.join(root,'.sites-runtime'),{recursive:true});
 await build({entryPoints:['github-pages/client.tsx'],bundle:true,minify:true,platform:'browser',target:['es2020'],format:'esm',outfile:path.join(output,'assets/portal.js'),define});
@@ -21,10 +22,10 @@ await copyFile('public/naf-logo.png',path.join(output,'naf-logo.png'));
 await writeFile(path.join(output,'.nojekyll'),'');
 await build({stdin:{contents:"import React from 'react';import {renderToString} from 'react-dom/server';import Portal from './app/portal';export const render=collegeId=>renderToString(React.createElement(Portal,{collegeId}));",resolveDir:root},bundle:true,platform:'node',format:'cjs',outfile:'.sites-runtime/github-render.cjs',define});
 const {render}=(await import(pathToFileURL(path.join(root,'.sites-runtime/github-render.cjs')))).default;
-for(const [id,label] of [['','Three-College Portal'],['srm','SRM Registration'],['vit','VIT Registration'],['au','Anna University Registration']]){
+for(const [id,label] of [['','Three-College Portal'],['srm','SRM Registration'],['vit','VIT Registration'],['aac','Adhiparashakthi Agricultural College Registration']]){
  const target=path.join(output,id?'register/'+id:'');await mkdir(target,{recursive:true});
  const html=`<!doctype html><html lang="en" data-college="${id}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="NAF World Soil Day 2026 student competitions. Register by 16 November 2026, 5:00 PM IST."><meta name="referrer" content="strict-origin-when-cross-origin"><title>${label} | World Soil Day 2026 – NAF</title><link rel="icon" href="${base}/naf-logo.png"><link rel="stylesheet" href="${base}/assets/portal.css"><script type="module" src="${base}/assets/portal.js"></script></head><body><div id="root">${render(id||undefined)}</div><noscript>Please enable JavaScript to see live seat availability and submit a registration securely.</noscript></body></html>`;
  await writeFile(path.join(target,'index.html'),html);
 }
 await writeFile(path.join(output,'404.html'),`<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Registration page not found – NAF</title><h1>Registration page not found</h1><p><a href="${base}/">Open the World Soil Day college registration portal</a></p></html>`);
-console.log('GitHub Pages site built in docs/ with locked SRM, VIT and AU pages.');
+console.log('GitHub Pages site built in docs/ with locked SRM, VIT and AAC pages.');

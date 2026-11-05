@@ -2,9 +2,9 @@ import {z} from "zod";
 export const COLLEGES=[
  {id:"srm",short:"SRM",name:"SRM Institute of Science and Technology (SRM)",slug:"srm"},
  {id:"vit",short:"VIT",name:"Vellore Institute of Technology (VIT)",slug:"vit"},
- {id:"au",short:"AU",name:"Anna University (AU)",slug:"au"},
+ {id:"aac",short:"AAC",name:"Adhiparashakthi Agricultural College",slug:"aac"},
 ] as const;
-export const COLLEGE_IDS=["srm","vit","au"] as const;
+export const COLLEGE_IDS=["srm","vit","aac"] as const;
 export const COLLEGE_NAMES=[COLLEGES[0].name,COLLEGES[1].name,COLLEGES[2].name] as const;
 export type CollegeId=typeof COLLEGE_IDS[number];
 export type College=typeof COLLEGES[number];
@@ -35,13 +35,13 @@ export const INSTRUCTIONS=[
 ];
 const switches=z.object({open:z.boolean(),essayOpen:z.boolean(),pptOpen:z.boolean(),posterOpen:z.boolean()});
 export const settingsSchema=z.object({essayOpen:z.boolean(),pptOpen:z.boolean(),posterOpen:z.boolean(),
- teamMin:z.literal(2),teamMax:z.literal(3),colleges:z.object({srm:switches,vit:switches,au:switches}),
+ teamMin:z.literal(2),teamMax:z.literal(3),colleges:z.object({srm:switches,vit:switches,aac:switches}),
  posterTopics:z.array(z.string().trim().min(3).max(180)).min(1).max(20),
 }).refine(s=>new Set(s.posterTopics).size===s.posterTopics.length,{message:"Poster topics must be unique."});
 export type Settings=z.infer<typeof settingsSchema>;
 const enabled={open:true,essayOpen:true,pptOpen:true,posterOpen:true};
-export const DEFAULT_SETTINGS:Settings={essayOpen:true,pptOpen:true,posterOpen:true,teamMin:2,teamMax:3,colleges:{srm:{...enabled},vit:{...enabled},au:{...enabled}},posterTopics:[...TOPICS]};
-export function normalizeSettings(raw:Partial<Settings>|null):Settings{return {...DEFAULT_SETTINGS,...raw,teamMin:2,teamMax:3,colleges:{srm:{...enabled,...raw?.colleges?.srm},vit:{...enabled,...raw?.colleges?.vit},au:{...enabled,...raw?.colleges?.au}},posterTopics:raw?.posterTopics||[...TOPICS]};}
+export const DEFAULT_SETTINGS:Settings={essayOpen:true,pptOpen:true,posterOpen:true,teamMin:2,teamMax:3,colleges:{srm:{...enabled},vit:{...enabled},aac:{...enabled}},posterTopics:[...TOPICS]};
+export function normalizeSettings(raw:Partial<Settings>|null):Settings{return {...DEFAULT_SETTINGS,...raw,teamMin:2,teamMax:3,colleges:{srm:{...enabled,...raw?.colleges?.srm},vit:{...enabled,...raw?.colleges?.vit},aac:{...enabled,...raw?.colleges?.aac}},posterTopics:raw?.posterTopics||[...TOPICS]};}
 export function normalizeMobile(value:string){let d=value.replace(/\D/g,"");if(/^0091\d{10}$/.test(d))d=d.slice(4);else if(/^91\d{10}$/.test(d))d=d.slice(2);else if(/^0\d{10}$/.test(d))d=d.slice(1);return d;}
 const text=z.string().trim().min(2).max(180);
 const email=z.string().trim().max(254).email("Enter a valid email address.").transform(v=>v.toLowerCase());

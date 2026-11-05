@@ -10,7 +10,7 @@ export const adminUrl=()=>`${apiOrigin}/admin`;
 export function rememberInstructions(id:CollegeId,token?:string){if(apiOrigin&&token)instructionContexts.set(id,token);}
 export function portalFetch(path:string,init:RequestInit={}){
  const headers=new Headers(init.headers);
- const college=path.match(/^\/api\/college\/(srm|vit|au)\/register$/)?.[1] as CollegeId|undefined;
+ const college=path.match(/^\/api\/college\/(srm|vit|aac)\/register$/)?.[1] as CollegeId|undefined;
  if(apiOrigin&&college){const token=instructionContexts.get(college);if(token)headers.set('X-Registration-Context',token);}
  return fetch(`${apiOrigin}${path}`,{...init,headers,credentials:apiOrigin?'omit':'same-origin'});
 }
