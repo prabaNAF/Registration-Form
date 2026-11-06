@@ -3,7 +3,7 @@
 export const EFFECTIVE_COLLEGE_SQL=`COALESCE(NULLIF(r.college_id,''),CASE lower(trim(json_extract(r.payload,'$.university')))
  WHEN 'srm university' THEN 'srm' WHEN 'srm institute of science and technology' THEN 'srm' WHEN 'srm institute of science and technology (srm)' THEN 'srm'
  WHEN 'vit university' THEN 'vit' WHEN 'vellore institute of technology' THEN 'vit' WHEN 'vellore institute of technology (vit)' THEN 'vit'
- WHEN 'adhiparashakthi agricultural college' THEN 'aac' WHEN 'adhiparashakthi agricultural college (aac)' THEN 'aac' ELSE NULL END)`;
+ WHEN 'adhiparashakthi agricultural college' THEN 'aac' WHEN 'adhiparashakthi agricultural college (aac)' THEN 'aac' WHEN 'adhiparaskthi agricultural and horticultural college' THEN 'aac' WHEN 'adhiparaskthi agricultural and horticultural college (aac)' THEN 'aac' ELSE NULL END)`;
 // One atomic SQLite write checks the database clock, college-specific capacity,
 // topic capacity, duplicates across every member, and manual closing controls.
 export const ATOMIC_REGISTER_SQL=`

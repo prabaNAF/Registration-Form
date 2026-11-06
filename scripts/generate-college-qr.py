@@ -11,7 +11,7 @@ args=parser.parse_args()
 origin=args.origin.rstrip('/')
 root=Path(args.output) if args.output else Path(__file__).resolve().parents[1]/'public'/'qr'
 root.mkdir(parents=True,exist_ok=True)
-colleges=[('srm','SRM Institute of Science and Technology (SRM)'),('vit','Vellore Institute of Technology (VIT)'),('aac','Adhiparashakthi Agricultural College')]
+colleges=[('srm','SRM Institute of Science and Technology (SRM)'),('vit','Vellore Institute of Technology (VIT)'),('aac','Adhiparaskthi Agricultural and Horticultural College')]
 for extension in ['png','svg']:
     (root/f'au-registration.{extension}').unlink(missing_ok=True)
 links=[]

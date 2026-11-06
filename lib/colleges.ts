@@ -4,7 +4,7 @@ export function legacyCollege(name:unknown):CollegeId|null {
  const n=name.trim().toLowerCase().replace(/\s+/g," ");
  if(["srm university","srm institute of science and technology","srm institute of science and technology (srm)"].includes(n))return "srm";
  if(["vit university","vellore institute of technology","vellore institute of technology (vit)"].includes(n))return "vit";
- if(["adhiparashakthi agricultural college","adhiparashakthi agricultural college (aac)"].includes(n))return "aac";
+ if(["adhiparashakthi agricultural college","adhiparashakthi agricultural college (aac)","adhiparaskthi agricultural and horticultural college","adhiparaskthi agricultural and horticultural college (aac)"].includes(n))return "aac";
  return null; // Retired Anna / Annamalai institutions remain historical; never relabel them as AAC.
 }
 export function adminRegistration(row:RegistrationRow):AdminRegistration {

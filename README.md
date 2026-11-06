@@ -2,7 +2,7 @@
 
 # National Agro Foundation — World Soil Day 2026
 
-A central D1-backed registration system for SRM Institute of Science and Technology (SRM), Vellore Institute of Technology (VIT), and Adhiparashakthi Agricultural College (AAC). Event: 5 December 2026. Theme: “Tackle soil compaction, boost food production.”
+A central D1-backed registration system for SRM Institute of Science and Technology (SRM), Vellore Institute of Technology (VIT), and Adhiparaskthi Agricultural and Horticultural College (AAC). Event: 5 December 2026. Theme: “Tackle soil compaction, boost food production.”
 
 ## Public college links
 
@@ -30,7 +30,7 @@ Excel (.xlsx) and UTF-8 CSV exports respect college, competition, status and sea
 
 ## Existing records and migrations
 
-The nullable `college_id` column is added by the second schema migration. Existing SRM/VIT aliases remain recognized and their bookings count against the corresponding new college limits. Prior Anna University and Annamalai University records remain historical and are not relabeled as Adhiparashakthi Agricultural College. AAC receives a new college ID and independent capacity. The retired AU link no longer accepts registrations. Records created under earlier rules remain intact and are marked for organizer review, including single-member PPT teams and missing newly required contact fields. Organizers can cancel invalid entries; no automated deletion or relabeling is performed.
+The nullable `college_id` column is added by the second schema migration. Existing SRM/VIT aliases remain recognized and their bookings count against the corresponding new college limits. Prior Anna University and Annamalai University records remain historical and are not relabeled as Adhiparaskthi Agricultural and Horticultural College. AAC receives a new college ID and independent capacity. The retired AU link no longer accepts registrations. Records created under earlier rules remain intact and are marked for organizer review, including single-member PPT teams and missing newly required contact fields. Organizers can cancel invalid entries; no automated deletion or relabeling is performed.
 
 ## Runtime configuration
 

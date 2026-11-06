@@ -2,7 +2,7 @@ import {z} from "zod";
 export const COLLEGES=[
  {id:"srm",short:"SRM",name:"SRM Institute of Science and Technology (SRM)",slug:"srm"},
  {id:"vit",short:"VIT",name:"Vellore Institute of Technology (VIT)",slug:"vit"},
- {id:"aac",short:"AAC",name:"Adhiparashakthi Agricultural College",slug:"aac"},
+ {id:"aac",short:"AAC",name:"Adhiparaskthi Agricultural and Horticultural College",slug:"aac"},
 ] as const;
 export const COLLEGE_IDS=["srm","vit","aac"] as const;
 export const COLLEGE_NAMES=[COLLEGES[0].name,COLLEGES[1].name,COLLEGES[2].name] as const;
