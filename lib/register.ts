@@ -1,4 +1,4 @@
-import {CLOSED_MESSAGE,COMPETITIONS,DEFAULT_SETTINGS,RULES_VERSION,getCollege,registrationSchema,type CollegeId,type Confirmation,type RegistrationRow} from "./domain";
+import {CLOSED_MESSAGE,COMPETITIONS,DEADLINE,DEFAULT_SETTINGS,RULES_VERSION,getCollege,registrationSchema,type CollegeId,type Confirmation,type RegistrationRow} from "./domain";
 import {ATOMIC_REGISTER_SQL} from "./registration-sql";
 import {availability,body,database,json} from "./server";
 import {verifyContext} from "./registration-context";
@@ -7,7 +7,7 @@ function confirmation(row:RegistrationRow):Confirmation{const c=getCollege(row.c
 export async function submitRegistration(request:Request,id:CollegeId){
  const college=getCollege(id)!;
  let raw;try{raw=await body(request,true);}catch{return json({error:"Submit this request using the college registration portal."},400);}
- if(Date.now()>=Date.parse("2026-11-16T11:30:00Z"))return json({error:CLOSED_MESSAGE,title:"REGISTRATION CLOSED",code:"deadline"},410);
+ if(Date.now()>=Date.parse(DEADLINE))return json({error:CLOSED_MESSAGE,title:"REGISTRATION CLOSED",code:"deadline"},410);
  const context=await verifyContext(request,id);
  if(!context)return json({error:"Read and acknowledge the instructions on this college’s registration page before proceeding.",code:"instructions_required"},403);
  if((raw.collegeId&&raw.collegeId!==id)||(raw.university&&raw.university!==college.name)

@@ -1,3 +1,4 @@
+import {DEADLINE} from "./domain";
 // Existing SRM/VIT records keep their bookings. Unrelated historical institutions
 // remain in the database for organizer review, outside the new college limits.
 export const EFFECTIVE_COLLEGE_SQL=`COALESCE(NULLIF(r.college_id,''),CASE lower(trim(json_extract(r.payload,'$.university')))
@@ -11,7 +12,7 @@ WITH input AS(SELECT ? id,? college_id,? competition,? topic,? payload,? request
  config AS(SELECT COALESCE((SELECT value FROM settings WHERE key='config'),'{}') value)
 INSERT INTO registrations(id,college_id,competition,topic,payload,request_key,created_at,status)
 SELECT i.id,i.college_id,i.competition,i.topic,i.payload,i.request_key,i.created_at,'confirmed' FROM input i,config c
-WHERE unixepoch('now')<unixepoch('2026-11-16T11:30:00Z')
+WHERE unixepoch('now')<unixepoch('${DEADLINE}')
 AND COALESCE(json_extract(c.value,'$.'||i.competition||'Open'),1)=1
 AND COALESCE(json_extract(c.value,'$.colleges.'||i.college_id||'.open'),1)=1
 AND COALESCE(json_extract(c.value,'$.colleges.'||i.college_id||'.'||i.competition||'Open'),1)=1

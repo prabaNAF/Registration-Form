@@ -16,7 +16,7 @@ Each server route fixes its college. Every member's college name is locked in th
 
 Every college has 25 Essay places, 15 PPT teams, and 25 Poster places. PPT accepts 2–3 students per team and exactly one of five supplied topics. Each topic accepts three teams per college. Total capacity: 75 Essay, 45 PPT teams, 75 Poster.
 
-The common deadline is **16 November 2026, 5:00 PM IST**, which is `2026-11-16T11:30:00Z`. All new registrations close at that instant, regardless of remaining places or manual controls. The countdown uses a server-clock snapshot. The final atomic insert checks the database clock, so a request that crosses the cutoff while being submitted is rejected. No scheduled job or open browser is required for closure.
+The common deadline is **20 November 2026, 5:00 PM IST**, which is `2026-11-20T11:30:00Z`. All new registrations close at that instant, regardless of remaining places or manual controls. The countdown uses a server-clock snapshot. The final atomic insert checks the database clock, so a request that crosses the cutoff while being submitted is rejected. No scheduled job or open browser is required for closure.
 
 `lib/registration-sql.ts` checks the college's total count, its topic count, every member's normalized email/mobile, normalized team name, configured opening switches, poster choices and the deadline in one SQLite write statement. All member details and instructions acknowledgement are stored in the same inserted record. Request UUIDs and a server-generated payload fingerprint make repeated or simultaneous identical requests idempotent.
 

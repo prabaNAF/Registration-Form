@@ -7,7 +7,7 @@ import {createLocalHarness} from './local-api-harness.mjs';
 const h=await createLocalHarness();const base='http://terminal.local:4173';
 const colleges={srm:'SRM Institute of Science and Technology (SRM)',vit:'Vellore Institute of Technology (VIT)',aac:'Adhiparaskthi Agricultural and Horticultural College'};
 const topics=['Genesis of Soil Compaction','Consequences of Soil Compaction','Diagnosis of Soil Compaction','Recent Advances in Soil Compaction Assessment','Ameliorative Measures in Soil Compaction'];
-const version='wsd-2026-three-college-v2';const deadline=Date.parse('2026-11-16T11:30:00.000Z');
+const version='wsd-2026-three-college-v2';const deadline=Date.parse('2026-11-20T11:30:00.000Z');
 const admin={'oai-authenticated-user-id':'qa-organizer','oai-authenticated-user-email':'qa@naf.test'};
 const cookies={};let serial=0,checks=0;
 const check=(condition,message)=>{assert.ok(condition,message);checks++;console.log('PASS '+message);};
@@ -30,6 +30,21 @@ try{
  check((await call('/api/college/srm/instructions',{accepted:false,version})).status===400,'instructions cannot be acknowledged with a false value');
  const firstAck=await ack('srm');check(firstAck.headers.get('set-cookie').includes('HttpOnly')&&firstAck.headers.get('set-cookie').includes('SameSite=Lax'),'acknowledgement context is held in an HttpOnly same-site cookie');
  await ack('vit');await ack('aac');
+ const initialTime='2026-11-04T10:00:00.000Z';
+ for(const time of ['2026-11-16T11:30:00.000Z','2026-11-19T18:30:00.000Z']){
+  h.setTime(time);
+  const extended=await state();check(!extended.deadlinePassed&&extended.deadline==='2026-11-20T11:30:00.000Z','availability reports the extended deadline at '+time);
+  for(const id of Object.keys(colleges)){
+   await ack(id);
+   for(const competition of ['essay','ppt','poster']){
+    const result=await reg(id,entry(id,competition));
+    check(result.status===201,`${id.toUpperCase()} ${competition} accepts registration during the extension at ${time}`);
+    await cancel(result.data.registration.id);
+    await h.database.prepare('DELETE FROM registrations WHERE id=?').bind(result.data.registration.id).run();
+   }
+  }
+ }
+ h.setTime(initialTime);for(const id of Object.keys(colleges))await ack(id);
  const srmToken=cookies.srm.slice(cookies.srm.indexOf('=')+1);
  check((await reg('vit',entry('vit'),'wsd_instructions_vit='+srmToken)).status===403,'signed SRM context cannot authorize a VIT entry');
  check((await reg('srm',entry('srm'),cookies.srm.slice(0,-2)+'xx')).status===403,'tampered acknowledgement signature rejected');

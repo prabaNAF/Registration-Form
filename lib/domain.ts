@@ -9,8 +9,8 @@ export const COLLEGE_NAMES=[COLLEGES[0].name,COLLEGES[1].name,COLLEGES[2].name] 
 export type CollegeId=typeof COLLEGE_IDS[number];
 export type College=typeof COLLEGES[number];
 export const getCollege=(id:unknown)=>COLLEGES.find(c=>c.id===id)||null;
-export const DEADLINE="2026-11-16T11:30:00.000Z";
-export const DEADLINE_LABEL="16 November 2026, 5:00 PM IST";
+export const DEADLINE="2026-11-20T11:30:00.000Z";
+export const DEADLINE_LABEL="20 November 2026, 5:00 PM IST";
 export const RULES_VERSION="wsd-2026-three-college-v2";
 export const CLOSED_MESSAGE="Thank you for your interest in World Soil Day 2026 Student Competitions. The registration deadline has ended.";
 export const TOPICS=["Genesis of Soil Compaction","Consequences of Soil Compaction","Diagnosis of Soil Compaction","Recent Advances in Soil Compaction Assessment","Ameliorative Measures in Soil Compaction"] as const;
@@ -30,7 +30,7 @@ export const INSTRUCTIONS=[
  "PPT topics will be allotted based on availability. Each topic can accommodate a maximum of 3 teams per college.",
  "Once the registration limit for a competition or topic is reached, further registration will not be permitted.",
  "Duplicate registrations are strictly prohibited.",
- "All registrations must be completed before 16 November 2026, 5:00 PM IST.",
+ `All registrations must be completed before ${DEADLINE_LABEL}.`,
  "Submission of the registration form does not guarantee participation unless a registration confirmation and unique registration ID are generated.",
 ];
 const switches=z.object({open:z.boolean(),essayOpen:z.boolean(),pptOpen:z.boolean(),posterOpen:z.boolean()});
