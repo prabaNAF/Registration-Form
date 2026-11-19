@@ -47,6 +47,11 @@
 .instructions-dialog{margin:auto}.instructions-dialog ol{list-style:decimal outside}
 
 .college-qr-grid.one-college{grid-template-columns:minmax(0,560px)}
+.poster-topic-guide{margin:24px 0;padding:20px 22px;background:#f1f5e9;border:1px solid #dbe4ce;border-radius:6px;color:#294934}
+.poster-topic-guide h4{font-size:16px;line-height:1.6;font-weight:600}
+.poster-topic-guide ol{list-style:decimal outside;margin:12px 0 0;padding-left:22px}
+.poster-topic-guide li{font-size:14px;line-height:1.8;margin-top:12px;padding-left:5px;overflow-wrap:anywhere}
+@media(max-width:580px){.poster-topic-guide{padding:17px 16px}.poster-topic-guide li{font-size:14px;line-height:1.75}}
 
 .deadline-announcement{background:radial-gradient(ellipse at 95% 10%,#657d3b55,transparent 60%),#244932;color:#fffdf3;border-bottom:4px solid #b4c681}
 .deadline-announcement-inner{display:grid;grid-template-columns:minmax(0,1fr) 216px;align-items:center;gap:42px;padding-top:29px;padding-bottom:29px}

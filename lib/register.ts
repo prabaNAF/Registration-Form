@@ -2,6 +2,7 @@ import {CLOSED_MESSAGE,COMPETITIONS,DEADLINE,DEFAULT_SETTINGS,RULES_VERSION,getC
 import {ATOMIC_REGISTER_SQL} from "./registration-sql";
 import {availability,body,database,json} from "./server";
 import {verifyContext} from "./registration-context";
+import {applyPublishedPosterTopics} from "./poster-topic-settings";
 
 function confirmation(row:RegistrationRow):Confirmation{const c=getCollege(row.college_id)!;return {id:row.id,collegeId:c.id,collegeName:c.name,competition:row.competition,topic:row.topic,createdAt:row.created_at,status:row.status};}
 export async function submitRegistration(request:Request,id:CollegeId){
@@ -23,6 +24,7 @@ export async function submitRegistration(request:Request,id:CollegeId){
  try{
   const db=database();const previous=await db.prepare('SELECT * FROM registrations WHERE request_key=?').bind(requestKey).first<RegistrationRow>();
   if(previous){if(previous.status!=='confirmed')return json({error:"This entry was cancelled. Reload the page for a new registration."},409);return matches(previous)?json({registration:confirmation(previous),repeated:true}):json({error:"This submission key was already used. Reload the page for a new entry."},409);}
+  if(details.competition==='poster')await applyPublishedPosterTopics(db);
   const registrationId=`WSD26-${college.short}-${COMPETITIONS[details.competition].code}-${crypto.randomUUID().replace(/-/g,'').slice(0,16).toUpperCase()}`;
   const now=new Date().toISOString();
   const result=await db.prepare(ATOMIC_REGISTER_SQL).bind(registrationId,id,details.competition,details.topic||null,payload,requestKey,now,JSON.stringify(DEFAULT_SETTINGS.posterTopics)).run();

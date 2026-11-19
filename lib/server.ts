@@ -3,12 +3,14 @@ import {registrationOrigin} from "./public-cors";
 import {getChatGPTUser} from "@/app/chatgpt-auth";
 import {COLLEGES,COMPETITIONS,TOPICS,DEADLINE,normalizeSettings,type Availability,type CollegeId,type Competition} from "./domain";
 import {EFFECTIVE_COLLEGE_SQL} from "./registration-sql";
+import {applyPublishedPosterTopics} from "./poster-topic-settings";
 export function database(){if(!env.DB)throw new Error("Registration database unavailable.");return env.DB;}
 export function json(data:unknown,status=200,headers:Record<string,string>={}){return Response.json(data,{status,headers:{"Cache-Control":"no-store, private","X-Content-Type-Options":"nosniff",...headers}});}
 export function validOrigin(r:Request){const o=r.headers.get("origin");return r.headers.get("sec-fetch-site")!=="cross-site"&&(!o||o===new URL(r.url).origin||o===env.PUBLIC_SITE_URL);}
 export async function body(r:Request,publicRegistration=false){if((!validOrigin(r)&&!(publicRegistration&&registrationOrigin(r)))||!r.headers.get("content-type")?.includes("application/json"))throw new Error("Use the registration portal.");if(Number(r.headers.get("content-length")||0)>32768)throw new Error("Request too large.");const value=await r.text();if(value.length>32768)throw new Error("Request too large.");return JSON.parse(value);}
 export async function adminUser(){const u=await getChatGPTUser();const allowed=(env.ADMIN_EMAILS||"").split(",").map(v=>v.trim().toLowerCase()).filter(Boolean);return u&&allowed.includes(u.email.toLowerCase())?u:null;}
 export async function availability():Promise<Availability>{
+ await applyPublishedPosterTopics(database());
  const d=await database().prepare(`SELECT strftime('%Y-%m-%dT%H:%M:%fZ','now') server_now,(SELECT value FROM settings WHERE key='config') config,
  (SELECT json_group_array(json_object('college',college,'competition',competition,'topic',topic,'count',n)) FROM
  (SELECT ${EFFECTIVE_COLLEGE_SQL} college,r.competition,r.topic,COUNT(*) n FROM registrations r WHERE r.status='confirmed' GROUP BY college,r.competition,r.topic)) counts`).first<{server_now:string;config:string|null;counts:string}>();

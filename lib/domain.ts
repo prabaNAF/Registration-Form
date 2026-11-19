@@ -14,6 +14,12 @@ export const DEADLINE_LABEL="20 November 2026, 5:00 PM IST";
 export const RULES_VERSION="wsd-2026-three-college-v2";
 export const CLOSED_MESSAGE="Thank you for your interest in World Soil Day 2026 Student Competitions. The registration deadline has ended.";
 export const TOPICS=["Genesis of Soil Compaction","Consequences of Soil Compaction","Diagnosis of Soil Compaction","Recent Advances in Soil Compaction Assessment","Ameliorative Measures in Soil Compaction"] as const;
+export const POSTER_TOPICS=[
+ "Breaking the Barrier: Mechanical and Biological Tillage Strategies to Alleviate Compaction",
+ "Controlled Traffic Farming (CTF): A Precision Approach to Minimizing Wheel-Induced Soil Compaction",
+ "The Choked Rhizosphere: Quantifying the Impact of Soil Compaction on Soil Properties and Nutrient Uptake",
+ "Loosening the Earth: How Organic Amendments and Earthworm Activity Restore Compacted Soil Structure",
+] as const;
 export const COMPETITIONS={
  essay:{title:"Essay Writing",full:"Essay Writing Competition",capacity:25,unit:"participants",code:"ESS"},
  ppt:{title:"Oral / PowerPoint",full:"Oral/PowerPoint Presentation",capacity:15,unit:"teams",code:"PPT"},
@@ -40,8 +46,8 @@ export const settingsSchema=z.object({essayOpen:z.boolean(),pptOpen:z.boolean(),
 }).refine(s=>new Set(s.posterTopics).size===s.posterTopics.length,{message:"Poster topics must be unique."});
 export type Settings=z.infer<typeof settingsSchema>;
 const enabled={open:true,essayOpen:true,pptOpen:true,posterOpen:true};
-export const DEFAULT_SETTINGS:Settings={essayOpen:true,pptOpen:true,posterOpen:true,teamMin:2,teamMax:3,colleges:{srm:{...enabled},vit:{...enabled},aac:{...enabled}},posterTopics:[...TOPICS]};
-export function normalizeSettings(raw:Partial<Settings>|null):Settings{return {...DEFAULT_SETTINGS,...raw,teamMin:2,teamMax:3,colleges:{srm:{...enabled,...raw?.colleges?.srm},vit:{...enabled,...raw?.colleges?.vit},aac:{...enabled,...raw?.colleges?.aac}},posterTopics:raw?.posterTopics||[...TOPICS]};}
+export const DEFAULT_SETTINGS:Settings={essayOpen:true,pptOpen:true,posterOpen:true,teamMin:2,teamMax:3,colleges:{srm:{...enabled},vit:{...enabled},aac:{...enabled}},posterTopics:[...POSTER_TOPICS]};
+export function normalizeSettings(raw:Partial<Settings>|null):Settings{return {...DEFAULT_SETTINGS,...raw,teamMin:2,teamMax:3,colleges:{srm:{...enabled,...raw?.colleges?.srm},vit:{...enabled,...raw?.colleges?.vit},aac:{...enabled,...raw?.colleges?.aac}},posterTopics:raw?.posterTopics||[...POSTER_TOPICS]};}
 export function normalizeMobile(value:string){let d=value.replace(/\D/g,"");if(/^0091\d{10}$/.test(d))d=d.slice(4);else if(/^91\d{10}$/.test(d))d=d.slice(2);else if(/^0\d{10}$/.test(d))d=d.slice(1);return d;}
 const text=z.string().trim().min(2).max(180);
 const email=z.string().trim().max(254).email("Enter a valid email address.").transform(v=>v.toLowerCase());
