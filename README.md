@@ -55,3 +55,7 @@ A GitHub Pages deployment is prepared in `docs/`. See [GITHUB_DEPLOYMENT.md](GIT
 ## Poster topic update — 19 November 2026
 
 Poster Presentation uses four separate choices in `POSTER_TOPICS` in `lib/domain.ts`. Students choose exactly one. `lib/poster-topic-settings.ts` applies the published list to the existing live settings once in a transactional batch, preserving manual switches, unrelated configuration and every recorded registration. A settings marker prevents repeated reads or later deployments from overwriting future administrator edits. The update is audited. This content update does not change the database schema, PPT topics, capacities or deadline.
+
+## PPT topic update — 19 November 2026
+
+The five new-registration PPT choices in `TOPICS` are Genesis of Soil Compaction; Recent Advances in Soil Compaction Assessment; Ameliorative Measures in Soil Compaction; The Economics of a Harpan; and Climate Change and Soil Compaction Nexus. Existing records retain their original topics, including withdrawn choices. Those bookings continue to count toward each college’s 15-team limit. The three retained topic titles preserve their exact stored values and three-team capacity counts. The two withdrawn topics no longer accept new registrations. Poster topics and all other registration rules remain unchanged.

@@ -8,7 +8,7 @@ const expected=[
  'The Choked Rhizosphere: Quantifying the Impact of Soil Compaction on Soil Properties and Nutrient Uptake',
  'Loosening the Earth: How Organic Amendments and Earthworm Activity Restore Compacted Soil Structure',
 ];
-const pptTopics=['Genesis of Soil Compaction','Consequences of Soil Compaction','Diagnosis of Soil Compaction','Recent Advances in Soil Compaction Assessment','Ameliorative Measures in Soil Compaction'];
+const pptTopics=["Genesis of Soil Compaction","Recent Advances in Soil Compaction Assessment","Ameliorative Measures in Soil Compaction","The Economics of a Harpan","Climate Change and Soil Compaction Nexus"];
 const colleges={srm:'SRM Institute of Science and Technology (SRM)',vit:'Vellore Institute of Technology (VIT)',aac:'Adhiparaskthi Agricultural and Horticultural College'};
 const h=await createLocalHarness();h.setTime('2026-11-19T07:00:00Z');
 const base='http://terminal.local:4173';let checks=0,serial=0;

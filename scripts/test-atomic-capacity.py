@@ -6,7 +6,7 @@ import json,sqlite3,threading,uuid,datetime
 
 root=Path(__file__).resolve().parents[1]
 sql=(root/'outputs/atomic-registration.sql').read_text()
-topics=['Genesis of Soil Compaction','Consequences of Soil Compaction','Diagnosis of Soil Compaction','Recent Advances in Soil Compaction Assessment','Ameliorative Measures in Soil Compaction']
+topics=['Genesis of Soil Compaction', 'Recent Advances in Soil Compaction Assessment', 'Ameliorative Measures in Soil Compaction', 'The Economics of a Harpan', 'Climate Change and Soil Compaction Nexus']
 colleges=['srm','vit','aac']
 deadline=datetime.datetime(2026,11,20,11,30,tzinfo=datetime.timezone.utc).timestamp()
 checks=0

@@ -6,7 +6,7 @@ import {createLocalHarness} from './local-api-harness.mjs';
 
 const h=await createLocalHarness();const base='http://terminal.local:4173';
 const colleges={srm:'SRM Institute of Science and Technology (SRM)',vit:'Vellore Institute of Technology (VIT)',aac:'Adhiparaskthi Agricultural and Horticultural College'};
-const topics=['Genesis of Soil Compaction','Consequences of Soil Compaction','Diagnosis of Soil Compaction','Recent Advances in Soil Compaction Assessment','Ameliorative Measures in Soil Compaction'];
+const topics=["Genesis of Soil Compaction","Recent Advances in Soil Compaction Assessment","Ameliorative Measures in Soil Compaction","The Economics of a Harpan","Climate Change and Soil Compaction Nexus"];
 const version='wsd-2026-three-college-v2';const deadline=Date.parse('2026-11-20T11:30:00.000Z');
 const admin={'oai-authenticated-user-id':'qa-organizer','oai-authenticated-user-email':'qa@naf.test'};
 const cookies={};let serial=0,checks=0;
@@ -45,6 +45,30 @@ try{
   }
  }
  h.setTime(initialTime);for(const id of Object.keys(colleges))await ack(id);
+ // Existing teams on retained and withdrawn topics still occupy their seats.
+ for(const id of Object.keys(colleges)){
+  const seeds=[];
+  for(const topic of [topics[0],topics[0],topics[0],'Consequences of Soil Compaction','Diagnosis of Soil Compaction']){
+   const input=entry(id,'ppt',topic);const seedId=`WSD26-${id.toUpperCase()}-PPT-${randomUUID().replaceAll('-','').slice(0,16).toUpperCase()}`;const payload=JSON.stringify(input);
+   await h.database.prepare('INSERT INTO registrations(id,college_id,competition,topic,payload,request_key,created_at,status) VALUES(?,?,?,?,?,?,?,?)').bind(seedId,id,'ppt',topic,payload,input.requestKey,'2026-11-03T10:00:00Z','confirmed').run();
+   seeds.push({id:seedId,topic,payload});
+  }
+  const revised=(await state()).colleges[id];
+  check(JSON.stringify(revised.topics.map(t=>t.name))===JSON.stringify(topics),`${id.toUpperCase()} shows exactly the five revised PPT choices`);
+  check(revised.competitions.ppt.count===5&&revised.topics[0].remaining===0,`${id.toUpperCase()} preserves occupied slots on the retained topic and total prior bookings`);
+  const withdrawn=await Promise.all(['Consequences of Soil Compaction','Diagnosis of Soil Compaction'].map(topic=>reg(id,entry(id,'ppt',topic))));
+  check(withdrawn.every(r=>r.status===400),`${id.toUpperCase()} rejects both withdrawn PPT topics for new entries`);
+  const newTopics=await Promise.all([topics[3],topics[4]].flatMap(topic=>Array.from({length:7},()=>reg(id,entry(id,'ppt',topic)))));
+  const afterNew=(await state()).colleges[id];
+  check(newTopics.filter(r=>r.status===201).length===6&&afterNew.topics[3].count===3&&afterNew.topics[4].count===3,`${id.toUpperCase()} limits each new PPT topic to three concurrent winners`);
+  const fill=await Promise.all([topics[1],topics[2]].flatMap(topic=>Array.from({length:7},()=>reg(id,entry(id,'ppt',topic)))));
+  const full=(await state()).colleges[id];
+  check(fill.filter(r=>r.status===201).length===4&&full.competitions.ppt.count===15&&!full.competitions.ppt.open&&full.topics.every(t=>t.count<=3),`${id.toUpperCase()} stops at 15 teams including withdrawn-topic bookings`);
+  const originals=await Promise.all(seeds.map(seed=>h.database.prepare('SELECT topic,payload,status FROM registrations WHERE id=?').bind(seed.id).first()));
+  check(originals.every((r,i)=>r.topic===seeds[i].topic&&r.payload===seeds[i].payload&&r.status==='confirmed'),`${id.toUpperCase()} keeps all original team details and topic assignments intact`);
+  // Clean this isolated in-memory fixture before the general capacity checks.
+  await h.database.prepare("DELETE FROM registrations WHERE college_id=? AND competition='ppt'").bind(id).run();
+ }
  const srmToken=cookies.srm.slice(cookies.srm.indexOf('=')+1);
  check((await reg('vit',entry('vit'),'wsd_instructions_vit='+srmToken)).status===403,'signed SRM context cannot authorize a VIT entry');
  check((await reg('srm',entry('srm'),cookies.srm.slice(0,-2)+'xx')).status===403,'tampered acknowledgement signature rejected');
