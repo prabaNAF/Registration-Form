@@ -13,7 +13,10 @@ export const DEADLINE="2026-11-20T11:30:00.000Z";
 export const DEADLINE_LABEL="20 November 2026, 5:00 PM IST";
 export const RULES_VERSION="wsd-2026-three-college-v2";
 export const CLOSED_MESSAGE="Thank you for your interest in World Soil Day 2026 Student Competitions. The registration deadline has ended.";
-export const TOPICS=["Genesis of Soil Compaction","Recent Advances in Soil Compaction Assessment","Ameliorative Measures in Soil Compaction","The Economics of a Harpan","Climate Change and Soil Compaction Nexus"] as const;
+export const HARDPAN_TOPIC="The Economics of a Hardpan";
+export const PREVIOUS_HARDPAN_TOPIC="The Economics of a Harpan";
+export function canonicalPptTopic(topic:string|null){return topic===PREVIOUS_HARDPAN_TOPIC?HARDPAN_TOPIC:topic;}
+export const TOPICS=["Genesis of Soil Compaction","Recent Advances in Soil Compaction Assessment","Ameliorative Measures in Soil Compaction","The Economics of a Hardpan","Climate Change and Soil Compaction Nexus"] as const;
 export const POSTER_TOPICS=[
  "Breaking the Barrier: Mechanical and Biological Tillage Strategies to Alleviate Compaction",
  "Controlled Traffic Farming (CTF): A Precision Approach to Minimizing Wheel-Induced Soil Compaction",

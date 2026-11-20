@@ -1,4 +1,4 @@
-import {DEADLINE} from "./domain";
+import {DEADLINE,HARDPAN_TOPIC,PREVIOUS_HARDPAN_TOPIC} from "./domain";
 // Existing SRM/VIT records keep their bookings. Unrelated historical institutions
 // remain in the database for organizer review, outside the new college limits.
 export const EFFECTIVE_COLLEGE_SQL=`COALESCE(NULLIF(r.college_id,''),CASE lower(trim(json_extract(r.payload,'$.university')))
@@ -19,7 +19,7 @@ AND COALESCE(json_extract(c.value,'$.colleges.'||i.college_id||'.'||i.competitio
 AND (SELECT COUNT(*) FROM registrations r WHERE ${EFFECTIVE_COLLEGE_SQL}=i.college_id AND r.competition=i.competition AND r.status='confirmed')<CASE i.competition WHEN 'ppt' THEN 15 ELSE 25 END
 AND (i.competition!='ppt' OR(
  json_array_length(i.payload,'$.members') BETWEEN 2 AND 3
- AND (SELECT COUNT(*) FROM registrations r WHERE ${EFFECTIVE_COLLEGE_SQL}=i.college_id AND r.competition='ppt' AND r.topic=i.topic AND r.status='confirmed')<3
+ AND (SELECT COUNT(*) FROM registrations r WHERE ${EFFECTIVE_COLLEGE_SQL}=i.college_id AND r.competition='ppt' AND (CASE r.topic WHEN '${PREVIOUS_HARDPAN_TOPIC}' THEN '${HARDPAN_TOPIC}' ELSE r.topic END)=(CASE i.topic WHEN '${PREVIOUS_HARDPAN_TOPIC}' THEN '${HARDPAN_TOPIC}' ELSE i.topic END) AND r.status='confirmed')<3
  AND NOT EXISTS(SELECT 1 FROM registrations r WHERE ${EFFECTIVE_COLLEGE_SQL}=i.college_id AND r.competition='ppt' AND r.status='confirmed' AND COALESCE(json_extract(r.payload,'$.teamNameKey'),lower(trim(json_extract(r.payload,'$.teamName'))))=json_extract(i.payload,'$.teamNameKey'))))
 AND (i.competition!='poster' OR EXISTS(SELECT 1 FROM json_each(COALESCE(json_extract(c.value,'$.posterTopics'),?)) t WHERE t.value=i.topic))
 AND NOT EXISTS(SELECT 1 FROM registrations r,json_each(r.payload,'$.members') old_member,json_each(i.payload,'$.members') new_member

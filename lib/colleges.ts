@@ -1,4 +1,4 @@
-import {COLLEGES,RULES_VERSION,COMPETITIONS,getCollege,type CollegeId,type AdminRegistration,type RegistrationRow,type Competition} from "./domain";
+import {COLLEGES,RULES_VERSION,COMPETITIONS,getCollege,canonicalPptTopic,type CollegeId,type AdminRegistration,type RegistrationRow,type Competition} from "./domain";
 export function legacyCollege(name:unknown):CollegeId|null {
  if(typeof name!=="string")return null;
  const n=name.trim().toLowerCase().replace(/\s+/g," ");
@@ -11,7 +11,7 @@ export function adminRegistration(row:RegistrationRow):AdminRegistration {
  const {payload,request_key,...fields}=row;const d=JSON.parse(payload);
  const collegeId=getCollege(row.college_id)?.id||legacyCollege(d.university);
  const college=getCollege(collegeId);
- return {...fields,collegeId,legacy:!college||d.rulesVersion!==RULES_VERSION,details:{...d,collegeId,university:college?.name||d.university||null,facultyEmail:d.facultyEmail||"",members:(d.members||[]).map((m:Record<string,unknown>)=>({...m,degree:m.degree||""}))}};
+ return {...fields,topic:fields.competition==='ppt'?canonicalPptTopic(fields.topic):fields.topic,collegeId,legacy:!college||d.rulesVersion!==RULES_VERSION,details:{...d,topic:fields.competition==='ppt'?canonicalPptTopic(fields.topic)||'':d.topic,collegeId,university:college?.name||d.university||null,facultyEmail:d.facultyEmail||"",members:(d.members||[]).map((m:Record<string,unknown>)=>({...m,degree:m.degree||""}))}};
 }
 export type CollegeFilter=CollegeId|"all"|"legacy";
 export function filterRegistrations(rows:AdminRegistration[],filter:{college?:CollegeFilter;competition?:Competition|"all";status?:string;query?:string}){

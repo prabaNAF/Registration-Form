@@ -1,10 +1,10 @@
-import {CLOSED_MESSAGE,COMPETITIONS,DEADLINE,DEFAULT_SETTINGS,RULES_VERSION,getCollege,registrationSchema,type CollegeId,type Confirmation,type RegistrationRow} from "./domain";
+import {CLOSED_MESSAGE,COMPETITIONS,DEADLINE,DEFAULT_SETTINGS,RULES_VERSION,getCollege,canonicalPptTopic,registrationSchema,type CollegeId,type Confirmation,type RegistrationRow} from "./domain";
 import {ATOMIC_REGISTER_SQL} from "./registration-sql";
 import {availability,body,database,json} from "./server";
 import {verifyContext} from "./registration-context";
 import {applyPublishedPosterTopics} from "./poster-topic-settings";
 
-function confirmation(row:RegistrationRow):Confirmation{const c=getCollege(row.college_id)!;return {id:row.id,collegeId:c.id,collegeName:c.name,competition:row.competition,topic:row.topic,createdAt:row.created_at,status:row.status};}
+function confirmation(row:RegistrationRow):Confirmation{const c=getCollege(row.college_id)!;return {id:row.id,collegeId:c.id,collegeName:c.name,competition:row.competition,topic:row.competition==='ppt'?canonicalPptTopic(row.topic):row.topic,createdAt:row.created_at,status:row.status};}
 export async function submitRegistration(request:Request,id:CollegeId){
  const college=getCollege(id)!;
  let raw;try{raw=await body(request,true);}catch{return json({error:"Submit this request using the college registration portal."},400);}

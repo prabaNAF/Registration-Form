@@ -6,7 +6,7 @@ import json,sqlite3,threading,uuid,datetime
 
 root=Path(__file__).resolve().parents[1]
 sql=(root/'outputs/atomic-registration.sql').read_text()
-topics=['Genesis of Soil Compaction', 'Recent Advances in Soil Compaction Assessment', 'Ameliorative Measures in Soil Compaction', 'The Economics of a Harpan', 'Climate Change and Soil Compaction Nexus']
+topics=['Genesis of Soil Compaction', 'Recent Advances in Soil Compaction Assessment', 'Ameliorative Measures in Soil Compaction', 'The Economics of a Hardpan', 'Climate Change and Soil Compaction Nexus']
 colleges=['srm','vit','aac']
 deadline=datetime.datetime(2026,11,20,11,30,tzinfo=datetime.timezone.utc).timestamp()
 checks=0
@@ -49,6 +49,9 @@ with TemporaryDirectory() as temporary:
     check(all(db.execute('SELECT count(*) FROM registrations WHERE college_id=?',(c,)).fetchone()[0]==15 for c in colleges),'each college has exactly 15 PPT teams')
     reset();check(race([('srm','ppt',topics[0])]*20)==3,'one college topic cannot exceed three concurrent registrations')
     check(attempt('vit','ppt',topics[0])==1 and attempt('aac','ppt',topics[0])==1,'full SRM topic does not remove VIT or AAC slots')
+    reset();assert attempt('srm','ppt','The Economics of a Harpan')==1
+    check(race([('srm','ppt',topics[3])]*20)==2,'former Hardpan spelling leaves exactly two slots for 20 concurrent corrected-title writers')
+    check(attempt('srm','ppt',topics[3])==0 and attempt('vit','ppt',topics[3])==1 and attempt('aac','ppt',topics[3])==1,'corrected Hardpan topic closes only for the full college')
     reset();check(race([('srm','essay','', 'duplicate@example.invalid')]*20)==1,'simultaneous duplicate emails consume exactly one college seat')
     check(attempt('vit','essay','', 'duplicate@example.invalid')==1,'same contact in another college is not blocked by SRM')
     reset();check(race([('aac','essay','',None,'9000000000')]*20)==1,'simultaneous duplicate mobile numbers consume one seat')

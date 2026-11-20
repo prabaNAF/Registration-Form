@@ -1,7 +1,7 @@
 import {env} from "cloudflare:workers";
 import {registrationOrigin} from "./public-cors";
 import {getChatGPTUser} from "@/app/chatgpt-auth";
-import {COLLEGES,COMPETITIONS,TOPICS,DEADLINE,normalizeSettings,type Availability,type CollegeId,type Competition} from "./domain";
+import {COLLEGES,COMPETITIONS,TOPICS,DEADLINE,normalizeSettings,canonicalPptTopic,type Availability,type CollegeId,type Competition} from "./domain";
 import {EFFECTIVE_COLLEGE_SQL} from "./registration-sql";
 import {applyPublishedPosterTopics} from "./poster-topic-settings";
 export function database(){if(!env.DB)throw new Error("Registration database unavailable.");return env.DB;}
@@ -18,7 +18,7 @@ export async function availability():Promise<Availability>{
  const settings=normalizeSettings(d.config?JSON.parse(d.config):null);const deadlinePassed=Date.parse(d.server_now)>=Date.parse(DEADLINE);
  const rows=JSON.parse(d.counts||"[]") as {college:CollegeId|null;competition:Competition;topic:string|null;count:number}[];
  const colleges={} as Availability['colleges'];const competitions={} as Availability['competitions'];
- for(const c of COLLEGES){const counts={} as Availability['competitions'];for(const key of Object.keys(COMPETITIONS) as Competition[]){const count=rows.filter(r=>r.college===c.id&&r.competition===key).reduce((n,r)=>n+r.count,0);const capacity=COMPETITIONS[key].capacity;const manual=!settings[`${key}Open`]||!settings.colleges[c.id].open||!settings.colleges[c.id][`${key}Open`];const reason=deadlinePassed?'deadline':manual?'manual':count>=capacity?'full':null;counts[key]={count,capacity,remaining:Math.max(0,capacity-count),open:reason===null,reason};}colleges[c.id]={collegeId:c.id,competitions:counts,topics:TOPICS.map(name=>{const count=rows.find(r=>r.college===c.id&&r.competition==='ppt'&&r.topic===name)?.count||0;return {name,count,remaining:Math.max(0,3-count)};}),open:!deadlinePassed&&settings.colleges[c.id].open};}
+ for(const c of COLLEGES){const counts={} as Availability['competitions'];for(const key of Object.keys(COMPETITIONS) as Competition[]){const count=rows.filter(r=>r.college===c.id&&r.competition===key).reduce((n,r)=>n+r.count,0);const capacity=COMPETITIONS[key].capacity;const manual=!settings[`${key}Open`]||!settings.colleges[c.id].open||!settings.colleges[c.id][`${key}Open`];const reason=deadlinePassed?'deadline':manual?'manual':count>=capacity?'full':null;counts[key]={count,capacity,remaining:Math.max(0,capacity-count),open:reason===null,reason};}colleges[c.id]={collegeId:c.id,competitions:counts,topics:TOPICS.map(name=>{const count=rows.filter(r=>r.college===c.id&&r.competition==='ppt'&&canonicalPptTopic(r.topic)===name).reduce((n,r)=>n+r.count,0);return {name,count,remaining:Math.max(0,3-count)};}),open:!deadlinePassed&&settings.colleges[c.id].open};}
  for(const key of Object.keys(COMPETITIONS) as Competition[]){const count=COLLEGES.reduce((n,c)=>n+colleges[c.id].competitions[key].count,0);const capacity=COMPETITIONS[key].capacity*3;competitions[key]={count,capacity,remaining:COLLEGES.reduce((n,c)=>n+colleges[c.id].competitions[key].remaining,0),open:COLLEGES.some(c=>colleges[c.id].competitions[key].open),reason:deadlinePassed?'deadline':null};}
  return {settings,serverNow:d.server_now,deadline:DEADLINE,deadlinePassed,colleges,competitions};
 }
