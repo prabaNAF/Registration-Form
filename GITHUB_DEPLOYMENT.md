@@ -27,7 +27,7 @@ Commit `docs/` after rebuilding. The existing public backend must keep `PUBLIC_R
 
 ## Registration security and backend checks
 
-Only the exact approved GitHub origin can read public registration responses through CORS. Student acknowledgement uses an origin-bound, college-bound HMAC context retained only in browser memory. Third-party cookies are not required. Admin routes do not allow cross-origin access. Reloading a page requires acknowledging instructions again. All final capacity checks, duplicate checks and the 20 November 2026, 5:00 PM IST deadline remain in the server-side atomic database write.
+Only the exact approved GitHub origin can read public registration responses through CORS. Student acknowledgement uses an origin-bound, college-bound HMAC context retained only in browser memory. Third-party cookies are not required. Admin routes do not allow cross-origin access. Reloading a page requires acknowledging instructions again. All final capacity checks, duplicate checks and the 24 November 2026, 5:00 PM IST deadline remain in the server-side atomic database write.
 
 ```sh
 node scripts/test-registration.mjs

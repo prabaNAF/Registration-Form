@@ -9,8 +9,8 @@ export const COLLEGE_NAMES=[COLLEGES[0].name,COLLEGES[1].name,COLLEGES[2].name] 
 export type CollegeId=typeof COLLEGE_IDS[number];
 export type College=typeof COLLEGES[number];
 export const getCollege=(id:unknown)=>COLLEGES.find(c=>c.id===id)||null;
-export const DEADLINE="2026-11-20T11:30:00.000Z";
-export const DEADLINE_LABEL="20 November 2026, 5:00 PM IST";
+export const DEADLINE="2026-11-24T11:30:00.000Z";
+export const DEADLINE_LABEL="24 November 2026, 5:00 PM IST";
 export const RULES_VERSION="wsd-2026-three-college-v2";
 export const CLOSED_MESSAGE="Thank you for your interest in World Soil Day 2026 Student Competitions. The registration deadline has ended.";
 export const HARDPAN_TOPIC="The Economics of a Hardpan";

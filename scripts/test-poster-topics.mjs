@@ -38,7 +38,7 @@ try{
  }
  const current=await state();
  check(Object.values(current.colleges).every(c=>JSON.stringify(c.topics.map(t=>t.name))===JSON.stringify(pptTopics)),'all five PPT topics remain unchanged for every college');
- check(current.deadline==='2026-11-20T11:30:00.000Z'&&Object.values(current.colleges).every(c=>c.competitions.poster.capacity===25),'deadline and independent 25-seat poster limits remain unchanged');
+ check(current.deadline==='2026-11-24T11:30:00.000Z'&&Object.values(current.colleges).every(c=>c.competitions.poster.capacity===25),'deadline and independent 25-seat poster limits remain unchanged');
  check(current.colleges.srm.competitions.poster.count===5&&current.colleges.vit.competitions.poster.count===4&&current.colleges.aac.competitions.poster.count===4,'rejected topics consume no seats and historical registrations still count');
  const custom={...current.settings,posterTopics:['Future organizer topic']};
  const edited=await call('/api/admin',{action:'settings',settings:custom},{'oai-authenticated-user-id':'qa-organizer','oai-authenticated-user-email':'qa@naf.test'});

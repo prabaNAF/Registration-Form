@@ -7,7 +7,7 @@ import {createLocalHarness} from './local-api-harness.mjs';
 const h=await createLocalHarness();const base='http://terminal.local:4173';
 const colleges={srm:'SRM Institute of Science and Technology (SRM)',vit:'Vellore Institute of Technology (VIT)',aac:'Adhiparaskthi Agricultural and Horticultural College'};
 const topics=["Genesis of Soil Compaction","Recent Advances in Soil Compaction Assessment","Ameliorative Measures in Soil Compaction","The Economics of a Hardpan","Climate Change and Soil Compaction Nexus"];
-const version='wsd-2026-three-college-v2';const deadline=Date.parse('2026-11-20T11:30:00.000Z');
+const version='wsd-2026-three-college-v2';const deadline=Date.parse('2026-11-24T11:30:00.000Z');
 const admin={'oai-authenticated-user-id':'qa-organizer','oai-authenticated-user-email':'qa@naf.test'};
 const cookies={};let serial=0,checks=0;
 const check=(condition,message)=>{assert.ok(condition,message);checks++;console.log('PASS '+message);};
@@ -31,9 +31,9 @@ try{
  const firstAck=await ack('srm');check(firstAck.headers.get('set-cookie').includes('HttpOnly')&&firstAck.headers.get('set-cookie').includes('SameSite=Lax'),'acknowledgement context is held in an HttpOnly same-site cookie');
  await ack('vit');await ack('aac');
  const initialTime='2026-11-04T10:00:00.000Z';
- for(const time of ['2026-11-16T11:30:00.000Z','2026-11-19T18:30:00.000Z']){
+ for(const time of ['2026-11-20T11:30:00.000Z','2026-11-23T18:30:00.000Z']){
   h.setTime(time);
-  const extended=await state();check(!extended.deadlinePassed&&extended.deadline==='2026-11-20T11:30:00.000Z','availability reports the extended deadline at '+time);
+  const extended=await state();check(!extended.deadlinePassed&&extended.deadline==='2026-11-24T11:30:00.000Z','availability reports the extended deadline at '+time);
   for(const id of Object.keys(colleges)){
    await ack(id);
    for(const competition of ['essay','ppt','poster']){

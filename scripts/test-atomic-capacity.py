@@ -8,7 +8,7 @@ root=Path(__file__).resolve().parents[1]
 sql=(root/'outputs/atomic-registration.sql').read_text()
 topics=['Genesis of Soil Compaction', 'Recent Advances in Soil Compaction Assessment', 'Ameliorative Measures in Soil Compaction', 'The Economics of a Hardpan', 'Climate Change and Soil Compaction Nexus']
 colleges=['srm','vit','aac']
-deadline=datetime.datetime(2026,11,20,11,30,tzinfo=datetime.timezone.utc).timestamp()
+deadline=datetime.datetime(2026,11,24,11,30,tzinfo=datetime.timezone.utc).timestamp()
 checks=0
 def check(condition,message):
     global checks
@@ -59,7 +59,7 @@ with TemporaryDirectory() as temporary:
     reset()
     for _ in range(24):assert attempt('aac')==1
     check(race([('aac',)]*20)==1,'20 writers competing for AAC’s final essay seat yield exactly one winner')
-    reset();check(all(attempt(c,clock=datetime.datetime(2026,11,16,11,30,tzinfo=datetime.timezone.utc).timestamp())==1 for c in colleges),'database accepts all three colleges at the former cutoff during the extension')
+    reset();check(all(attempt(c,clock=datetime.datetime(2026,11,20,11,30,tzinfo=datetime.timezone.utc).timestamp())==1 for c in colleges),'database accepts all three colleges at the former cutoff during the extension')
     reset();check(attempt('srm',clock=deadline-.001)==1,'database accepts a write one millisecond before the cutoff')
     check(attempt('vit',clock=deadline)==0 and attempt('aac',clock=deadline+.001)==0,'database rejects at and immediately after the exact IST cutoff')
     reset();db.execute("INSERT INTO settings(key,value) VALUES('config',?)",(json.dumps({'colleges':{'srm':{'open':False}}}),))

@@ -29,7 +29,7 @@ for identifier,name in colleges:
     (root/f'{identifier}-registration.svg').write_text(f'<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="2400" viewBox="0 0 {n+8} {n+8}" shape-rendering="crispEdges"><title>{name} World Soil Day 2026 Registration</title><rect width="100%" height="100%" fill="white"/><path fill="#203e2f" d="'+''.join(paths)+'"/></svg>')
     links.append(name+'\n'+url+'\n')
     print(identifier,str(size)+' x '+str(size),url)
-(root/'College_Registration_Links.txt').write_text('NATIONAL AGRO FOUNDATION\nWORLD SOIL DAY 2026 — STUDENT COMPETITIONS\nEvent: 5 December 2026\nRegistration closes: 20 November 2026, 5:00 PM IST\n\n'+'\n'.join(links)+'\nEach QR code opens its own locked college registration link.\nPNG: high-resolution, 300 DPI. SVG: scalable print artwork.\nKeep the white quiet zone around each QR code when printing.\n')
+(root/'College_Registration_Links.txt').write_text('NATIONAL AGRO FOUNDATION\nWORLD SOIL DAY 2026 — STUDENT COMPETITIONS\nEvent: 5 December 2026\nRegistration closes: 24 November 2026, 5:00 PM IST\n\n'+'\n'.join(links)+'\nEach QR code opens its own locked college registration link.\nPNG: high-resolution, 300 DPI. SVG: scalable print artwork.\nKeep the white quiet zone around each QR code when printing.\n')
 with zipfile.ZipFile(root/'NAF_Three_College_Registration_QR_Codes.zip','w',zipfile.ZIP_DEFLATED) as archive:
     for identifier,_ in colleges:
         for extension in ['png','svg']:archive.write(root/f'{identifier}-registration.{extension}',f'{identifier.upper()}_Registration_QR.{extension}')
